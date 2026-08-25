@@ -1113,8 +1113,7 @@ dependencies = [
 [[package]]
 name = "ssh-agent-client-rs"
 version = "1.1.3"
-source = "registry+https://github.com/rust-lang/crates.io-index"
-checksum = "d0eca9f3c8984d0deb4e773ab3bb8aab0c9c0276b63b72d82c090fe58a620cf9"
+source = "git+https://github.com/ssr-zna/ssh-agent-client-rs?rev=d6b0972#d6b09721888b9e1ccee4c3582d1a94a015888526"
 dependencies = [
  "bytes",
  "interprocess",
