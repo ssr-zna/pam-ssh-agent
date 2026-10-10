@@ -44,4 +44,4 @@ env_logger = "0.11"
 native-crypto = ["dep:openssl", "dep:p256", "dep:p384", "dep:p521"]
 
 [patch.crates-io]
-ssh-agent-client-rs = { git = "https://github.com/ssr-zna/ssh-agent-client-rs", rev = "d6b0972" }
+ssh-agent-client-rs = { git = "https://github.com/nresare/ssh-agent-client-rs", rev = "2de5bb3" }
