@@ -25,6 +25,7 @@ pam-bindings = "0.3"
 # Keep this on 6.x until https://bugzilla.redhat.com/show_bug.cgi?id=2300127 is resolved
 syslog = "6.1"
 uzers = { version = "0.12", default-features = false }
+libc = "0.2"
 hostname = { version = "0.4", default-features = false }
 log = "0.4"
 

@@ -9,6 +9,7 @@ mod logging;
 #[cfg(feature = "native-crypto")]
 mod nativecrypto;
 mod pamext;
+mod socket;
 #[cfg(test)]
 mod test;
 mod verify;
@@ -24,6 +25,7 @@ use crate::environment::{Environment, UnixEnvironment};
 use crate::filter::IdentityFilter;
 use crate::logging::init_logging;
 use crate::pamext::PamHandleExt;
+use crate::socket::{AGENT_TIMEOUT, connect_as_user};
 use anyhow::{Context, Result, anyhow};
 use args::Args;
 use log::{debug, error, info};
@@ -101,7 +103,8 @@ fn do_authenticate(args: &Args, handle: &PamHandle) -> Result<()> {
         info!("Invoking command '{authorized_keys_command}' to obtain keys");
     }
 
-    let ssh_agent_client = Client::connect(Path::new(path.as_str()))?;
+    let stream = connect_as_user(Path::new(path.as_str()), &calling_user, AGENT_TIMEOUT)?;
+    let ssh_agent_client = Client::with_read_write(Box::new(stream));
 
     let filter = IdentityFilter::new(
         Path::new(args.file.as_str()),

@@ -771,6 +771,7 @@ dependencies = [
  "env_logger",
  "getrandom 0.4.2",
  "hostname 0.4.2",
+ "libc",
  "log",
  "openssl",
  "p256",
