@@ -3,16 +3,16 @@ use std::io::{self, Read, Write};
 use std::os::unix::net::UnixStream;
 use std::path::Path;
 use std::time::{Duration, Instant};
-use uzers::get_user_by_name;
 
 pub const AGENT_TIMEOUT: Duration = Duration::from_secs(30);
 
-/// Connects to the agent socket with the filesystem permissions of `user`, so that a
-/// privileged caller such as sudo can only reach sockets that `user` could reach itself.
-pub fn connect_as_user(path: &Path, user: &str, timeout: Duration) -> Result<DeadlineStream> {
-    let user = get_user_by_name(user).ok_or_else(|| anyhow!("Failed to look up user {user}"))?;
+/// Connects to the agent socket with the filesystem permissions of the real user of the
+/// process, so that a setuid caller such as sudo can only reach sockets its invoking user
+/// could reach itself. PAM_USER is not used: sudo sets it to the target user under
+/// rootpw, targetpw and runaspw.
+pub fn connect_as_caller(path: &Path, timeout: Duration) -> Result<DeadlineStream> {
     let stream = {
-        let _ids = FsIds::switch(user.uid(), user.primary_group_id())?;
+        let _ids = FsIds::switch_to_real()?;
         UnixStream::connect(path)
     }
     .with_context(|| format!("Failed to connect to ssh-agent at {path:?}"))?;
@@ -69,7 +69,8 @@ struct FsIds {
 
 #[cfg(target_os = "linux")]
 impl FsIds {
-    fn switch(uid: libc::uid_t, gid: libc::gid_t) -> Result<Self> {
+    fn switch_to_real() -> Result<Self> {
+        let (uid, gid) = unsafe { (libc::getuid(), libc::getgid()) };
         let previous = FsIds {
             gid: unsafe { libc::setfsgid(gid) } as libc::gid_t,
             uid: unsafe { libc::setfsuid(uid) } as libc::uid_t,
@@ -98,7 +99,7 @@ struct FsIds;
 
 #[cfg(not(target_os = "linux"))]
 impl FsIds {
-    fn switch(_uid: u32, _gid: u32) -> Result<Self> {
+    fn switch_to_real() -> Result<Self> {
         Err(anyhow!(
             "Connecting with the caller's permissions is only supported on Linux"
         ))
